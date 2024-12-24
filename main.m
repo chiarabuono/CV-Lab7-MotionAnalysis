@@ -1,0 +1,1 @@
+compareCDAlgo('videos/luce_vp.mp4', 30, 0.1, 25);
