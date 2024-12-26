@@ -1,6 +1,17 @@
 function [] = compareCDAlgo(videoFile, tau1, alpha, tau2, N)
-    % This function compares the output of the change detection algorithm using
-    % two possible background models: static and running average.
+    % This function compares the output of the change detection algorithm when
+    % using two possible background models:
+    % 1. A static model, e.g. a single frame or the average of N frames.
+    % In this case, the background is computed once and for all
+    % 2. A running average to update the model. In this case the background is
+    % updated, if needed, at each time instant
+    % You must visualize the original video, the background and binary map
+    % obtained with 1., the background and binary map
+    % obtained with 2.
+    % tau1 is the threshold for the change detection
+    % alpha is the parameter to weight the contribution of current image and
+    % previous background in the running average
+    % tau2 is the threshold for the image differencing in the running average
     
     % Create a VideoReader object
     videoReader = VideoReader(videoFile);

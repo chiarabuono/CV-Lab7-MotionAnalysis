@@ -18,3 +18,4 @@ value = magnitudeNorm;             % Intensità basata sulla magnitudine
 % Conversione da HSV a RGB
 hsvImage = cat(3, hue, saturation, value);
 rgbImage = hsv2rgb(hsvImage);
+end
