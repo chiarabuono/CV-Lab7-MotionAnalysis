@@ -5,16 +5,16 @@ function [u, v] = LucasKanade(im1, im2, windowSize)
     % OUTPUT: two maps (double) encoding the two components of OF
     %---------------------------------------------------------------------
     
-    % Immagini check
+    % Image check
     if (size(im1,1)~=size(im2,1)) || (size(im1,2)~=size(im2,2))
-        error('Le due immagini hanno dimensioni diverse');
+        error('The two images have different dimensions');
     end
     
     if (size(im1,3) ~= 1) || (size(im2, 3) ~= 1)
-        error('Le immagini devono essere in scala di grigi');
+        error('The images must be grayscale');
     end
     
-    % Calcola le derivate spaziali e temporali
+    % Compute spatial and temporal derivatives
     [fx, fy, ft] = ComputeDerivatives(im1, im2);
     
     u = zeros(size(im1));
@@ -22,22 +22,22 @@ function [u, v] = LucasKanade(im1, im2, windowSize)
     
     halfW = floor(windowSize/2);
     
-    % Per ogni pixel dell'immagine costruiamo un sistema ai minimi quadrati
+    % For each pixel of the image, construct a least-squares system
     for i = halfW+1 : size(fx,1)-halfW
         for j = halfW+1:size(fx,2)-halfW
             
-            % Estrai la finestra locale
+            % Extract the local window
             fx_window = fx(i-halfW:i+halfW, j-halfW:j+halfW);
             fy_window = fy(i-halfW:i+halfW, j-halfW:j+halfW);
             
-            % Costruisci la matrice A
+            % Construct the matrix A
             A = [reshape(fx_window, [], 1), reshape(fy_window, [], 1)]; 
             
-            % Costruisci il vettore b
+            % Construct the vector b
             ft_window = ft(i-halfW:i+halfW, j-halfW:j+halfW);
             b = -reshape(ft_window, [], 1);
             
-            % Risolvi il sistema ai minimi quadrati
+            % Solve the least-squares system
             U = pinv(A)*b; 
             
             u(i,j)=U(1);
@@ -46,8 +46,8 @@ function [u, v] = LucasKanade(im1, im2, windowSize)
         end
     end
     
-    % Regola i NaN
+    % Handle NaN values
     u(isnan(u))=0;
     v(isnan(v))=0;
     
-    end
+end

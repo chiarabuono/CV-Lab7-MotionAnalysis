@@ -12,64 +12,71 @@ function [] = compareCDAlgo(videoFile, tau1, alpha, tau2, N)
     % alpha is the parameter to weight the contribution of current image and
     % previous background in the running average
     % tau2 is the threshold for the image differencing in the running average
+
     
     % Create a VideoReader object
     videoReader = VideoReader(videoFile);
     
-    % Initialize variables for the static background computation
+    % Initialize variables for static background computation
     staticBackground = 0; % Accumulator for averaging
     frameCount = 0;
     
     % Compute the static background (average of the first N frames)
     while hasFrame(videoReader) && frameCount < N
-        frame = readFrame(videoReader); % Read the next frame
+        frame = readFrame(videoReader);
         frameGray = rgb2gray(frame); % Convert to grayscale
         staticBackground = staticBackground + double(frameGray); % Accumulate
         frameCount = frameCount + 1;
     end
-    
-    % Compute the average background after processing N frames
+    % Compute average background
     staticBackground = uint8(staticBackground / frameCount);
     
-    % Reset the VideoReader to process the video again from the start
+    % Reset VideoReader to process video from the start
     videoReader.CurrentTime = 0;
     
     % Initialize running average background model
     runningAverage = double(staticBackground); % Start with static background
+    prevFrameGray = zeros(size(staticBackground), 'double'); % Placeholder for previous frame
     
-    % Loop through each frame of the video for comparison
+    % Process video frames
     while hasFrame(videoReader)
         % Read the next frame
         frame = readFrame(videoReader);
-        frameGray = rgb2gray(frame); % Convert to grayscale
+        frameGray = double(rgb2gray(frame)); % Convert to grayscale
         
         % Binary map for static background model
-        binaryMap1 = abs(double(frameGray) - double(staticBackground)) > tau1;
+        binaryMap1 = abs(frameGray - double(staticBackground)) > tau1;
         
-        % Update the running average
-        runningAverage = (1 - alpha) * runningAverage + alpha * double(frameGray);
+        % Update running average (vectorized operation)
+        diffWithPrev = abs(prevFrameGray - frameGray);
+        updateMask = diffWithPrev < tau2;
+        runningAverage(updateMask) = (1 - alpha) * runningAverage(updateMask) + alpha * frameGray(updateMask);
         
         % Binary map for running average model
-        binaryMap2 = abs(double(frameGray) - runningAverage) > tau2;
+        binaryMap2 = abs(frameGray - runningAverage) > tau1;
         
         % Visualization
-        figure(1), subplot(2, 3, 1), imshow(frame, 'Border', 'tight');
+        figure(1);
+        subplot(2, 3, 1), imshow(uint8(frameGray), 'Border', 'tight');
         title(sprintf('Frame %d', round(videoReader.CurrentTime * videoReader.FrameRate)));
         
-        figure(1), subplot(2, 3, 2), imshow(staticBackground, 'Border', 'tight');
-        title('Static background');
+        subplot(2, 3, 2), imshow(staticBackground, 'Border', 'tight');
+        title('Static Background');
         
-        figure(1), subplot(2, 3, 3), imshow(binaryMap1, 'Border', 'tight');
-        title('Binary map 1');
+        subplot(2, 3, 3), imshow(binaryMap1, 'Border', 'tight');
+        title('Binary Map 1');
         
-        figure(1), subplot(2, 3, 5), imshow(uint8(runningAverage), 'Border', 'tight');
-        title('Running average');
+        subplot(2, 3, 5), imshow(uint8(runningAverage), 'Border', 'tight');
+        title('Running Average');
         
-        figure(1), subplot(2, 3, 6), imshow(binaryMap2, 'Border', 'tight');
-        title('Binary map 2');
+        subplot(2, 3, 6), imshow(binaryMap2, 'Border', 'tight');
+        title('Binary Map 2');
+        
+        % Update previous frame
+        prevFrameGray = frameGray;
     end
     
-    % Close the figure when playback is finished
+    % Close all figures
     close all;
     
     fprintf('Finished displaying video: %s\n', videoFile);

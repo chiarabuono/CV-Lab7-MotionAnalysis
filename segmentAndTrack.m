@@ -1,6 +1,10 @@
 function [] = segmentAndTrack(videoFile, tau1, alpha, tau2)
-    % This function segments and tracks a target object in a video.
-    
+    % This function segments and tracks a target in a video based on change
+    % detection and user input. 
+    % tau1: Threshold for change detection.
+    % alpha: Weight for the running average background update.
+    % tau2: Threshold for image differencing in the running average.
+
     % Create a VideoReader object
     videoReader = VideoReader(videoFile);
     
@@ -13,18 +17,22 @@ function [] = segmentAndTrack(videoFile, tau1, alpha, tau2)
     while hasFrame(videoReader)
         % Read the next frame
         frame = readFrame(videoReader);
-        grayFrame = rgb2gray(frame); % Convert to grayscale for processing
+        grayFrame = double(rgb2gray(frame)); % Convert to grayscale for processing
     
         % Initialize the background model if not yet defined
         if isempty(background)
-            background = double(grayFrame);
+            background = grayFrame;
         end
     
-        % Update the running average background
-        background = alpha * double(grayFrame) + (1 - alpha) * background;
+        % Update the running average background using tau2
+        if i > 0
+            diffWithPrev = abs(grayFrame - background);
+            updateMask = diffWithPrev < tau2; % Update only pixels with small differences
+            background(updateMask) = alpha * grayFrame(updateMask) + (1 - alpha) * background(updateMask);
+        end
     
         % Perform change detection
-        binaryMap = abs(double(grayFrame) - background) > tau1;
+        binaryMap = abs(grayFrame - background) > tau1;
     
         % Display the current frame
         figure(1), imshow(frame, 'Border', 'tight');
