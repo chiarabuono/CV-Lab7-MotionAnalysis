@@ -12,6 +12,7 @@ function [] = compareCDAlgo(videoFile, tau1, alpha, tau2, N)
     % alpha is the parameter to weight the contribution of current image and
     % previous background in the running average
     % tau2 is the threshold for the image differencing in the running average
+    % N is the number of frame used to compute the static background
 
     
     % Create a VideoReader object
@@ -38,11 +39,11 @@ function [] = compareCDAlgo(videoFile, tau1, alpha, tau2, N)
     runningAverage = double(staticBackground); % Start with static background
     prevFrameGray = zeros(size(staticBackground), 'double'); % Placeholder for previous frame
     
-    % Process video frames
+    % Loop through each frame of the video
     while hasFrame(videoReader)
-        % Read the next frame
+        % Read the next frame and convert to gray scale
         frame = readFrame(videoReader);
-        frameGray = double(rgb2gray(frame)); % Convert to grayscale
+        frameGray = double(rgb2gray(frame)); % (as double for processing)
         
         % Binary map for static background model
         binaryMap1 = abs(frameGray - double(staticBackground)) > tau1;

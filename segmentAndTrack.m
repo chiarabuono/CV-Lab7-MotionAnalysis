@@ -43,9 +43,6 @@ function [] = segmentAndTrack(videoFile, tau1, alpha, tau2)
             disp('Select the target on the person (click on the figure).');
             pause(1);  % Pause for 1 second to give time for the user to focus
             
-            % Ensure the window is focused
-            figure(1);  % Force the figure to the foreground
-            
             % Get user input point with ginput
             disp('Click on the target with the left mouse button.');
             [x, y] = ginput(1); % Get user input point
